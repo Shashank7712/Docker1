@@ -1,53 +1,30 @@
 pipeline {
     agent any
 
-    environment {
-        DOCKER_IMAGE = "shashank7000/app-image"
-    }
-
     stages {
-
-        stage('Clone Repository') {
-            steps {
-                git 'https://github.com/shashank7000/https://github.com/Shashank7712/Docker1.git'
-            }
-        }
 
         stage('Build Docker Image') {
             steps {
-                script {
-                    docker.build("${DOCKER_IMAGE}:latest")
-                }
+                bat 'docker build -t shashank7000/myapp:latest .'
             }
         }
 
         stage('Login to Docker Hub') {
             steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub-creds',
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
-                )]) {
-                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                    bat 'echo %PASS% | docker login -u %USER% --password-stdin'
                 }
             }
         }
 
         stage('Push Docker Image') {
             steps {
-                script {
-                    docker.withRegistry('', 'dockerhub-creds') {
-                        docker.image("${DOCKER_IMAGE}:latest").push()
-                    }
-                }
+                bat 'docker push shashank7000/myapp:latest'
             }
         }
     }
 
     post {
-        success {
-            echo 'Image successfully built and pushed to Docker Hub'
-        }
         failure {
             echo 'Pipeline failed'
         }
